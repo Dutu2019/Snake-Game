@@ -64,8 +64,9 @@ class Game:
                 elif key == pygame.K_d and self.snake.get_direction() != "left":
                     self.snake.set_direction("right")
             
+            # Checks if snake touched the apple
             if self.snake.get_apple_rect() and self.snake.get_apple_rect().colliderect(self.snake.get_nodes().get_head().value.get_rect()):
-                self.snake.set_is_eating(True)
+                self.snake.set_is_eating(2)
 
 
             if self.is_in_bounds() and not self.snake.check_loop_collision():  # Checks if snake is in game area and doesn't loop on itself

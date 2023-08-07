@@ -79,7 +79,7 @@ class Snake:
         self.apple_radius = 10
         self.apple_coords = self.clip_coords(self.display_width/1.5, self.display_height//2)
         self.apple_rect = None
-        self.is_eating = False
+        self.is_eating = 0
 
         # Generate the 3 starting nodes
         for i in range(3): self.nodes.append_end(self.Node(self.clip_coords(self.display_width/4) - 2 * self.node_radius * i, self.clip_coords(self.display_height//2)))
@@ -88,8 +88,9 @@ class Snake:
         if not self.is_eating:
             self.nodes.remove_end()
         else:
-            self.set_is_eating(False)
-            self.set_apple_coords(self.clip_coords(random.randint(0, self.display_width-1)), self.clip_coords(random.randint(0, self.display_height-1)))
+            self.tick_eating()
+            if self.is_eating == 1:
+                self.set_apple_coords()
 
         head = self.nodes.get_head()
         
@@ -151,10 +152,22 @@ class Snake:
     def get_apple_rect(self) -> pygame.Rect | None:
         return self.apple_rect
     
-    def set_is_eating(self, value: bool) -> None:
-        self.is_eating = value
+    def set_is_eating(self, value: int) -> None:
+        if value >= 0:
+            self.is_eating = value
     
-    def set_apple_coords(self, x: int, y: int) -> None:
+    def tick_eating(self) -> None:
+        self.set_is_eating(self.is_eating - 1)
+    
+    def set_apple_coords(self) -> None:
+        valid = False
+        while not valid:
+            x, y = self.clip_coords(random.randint(0, self.display_width-1)), self.clip_coords(random.randint(0, self.display_height-1))
+            valid = True
+            for node in self.nodes:
+                if node.value.get_coords() == (x, y):
+                    valid = False
+                    break
         self.apple_coords = (x, y)
 
     class Node:
