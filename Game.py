@@ -40,9 +40,8 @@ class Game:
 
         run = True
         while run:
-            self.clock.tick(10)
+            self.clock.tick(7)
             self.display.fill(pygame.Color(0, 0, 0))
-            self.draw_grid()
 
             for event in pygame.event.get():
                 # Quits game when quit button is pressed
@@ -75,10 +74,11 @@ class Game:
                 self.snake.draw()
             else:
                 deathScreen()
-
+            
+            self.draw_grid()
             pygame.display.update()
 
 
 if __name__ == "__main__":
-    game = Game(900, 900)
+    game = Game(450, 450)
     game.play()

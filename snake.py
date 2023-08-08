@@ -72,6 +72,8 @@ class Snake:
         self.display_height = display.get_height()
         self.nodes: Queue = Queue()
         self.node_radius = 15
+        self.snake_thickness = 25
+        self.game_radius = 15
         self.node_color = pygame.Color(0, 255, 0)
 
         # In-game params
@@ -82,7 +84,7 @@ class Snake:
         self.is_eating = 0
 
         # Generate the 3 starting nodes
-        for i in range(3): self.nodes.append_end(self.Node(self.clip_coords(self.display_width/4) - 2 * self.node_radius * i, self.clip_coords(self.display_height//2)))
+        for i in range(3): self.nodes.append_end(self.Node(self.clip_coords(self.display_width/4) - 2 * self.get_node_radius() * i, self.clip_coords(self.display_height//2), "right"))
     
     def move(self) -> None:
         if not self.is_eating:
@@ -95,13 +97,13 @@ class Snake:
         head = self.nodes.get_head()
         
         if self.direction == "up":
-            self.nodes.append_start(self.Node(head.value.get_coords()[0], head.value.get_coords()[1] - 2 * self.node_radius))
+            self.nodes.append_start(self.Node(head.value.get_coords()[0], head.value.get_coords()[1] - 2 * self.get_node_radius(), "up"))
         elif self.direction == "down":
-            self.nodes.append_start(self.Node(head.value.get_coords()[0], head.value.get_coords()[1] + 2 * self.node_radius))
+            self.nodes.append_start(self.Node(head.value.get_coords()[0], head.value.get_coords()[1] + 2 * self.get_node_radius(), "down"))
         elif self.direction == "left":
-            self.nodes.append_start(self.Node(head.value.get_coords()[0] - 2 * self.node_radius, head.value.get_coords()[1]))
+            self.nodes.append_start(self.Node(head.value.get_coords()[0] - 2 * self.get_node_radius(), head.value.get_coords()[1], "left"))
         elif self.direction == "right":
-            self.nodes.append_start(self.Node(head.value.get_coords()[0] + 2 * self.node_radius, head.value.get_coords()[1]))
+            self.nodes.append_start(self.Node(head.value.get_coords()[0] + 2 * self.get_node_radius(), head.value.get_coords()[1], "right"))
 
     def draw(self) -> None:
         self.draw_snake()
@@ -109,8 +111,24 @@ class Snake:
 
     def draw_snake(self) -> None:
         for node in self.nodes:
-            rect = pygame.draw.circle(self.display, self.node_color, node.value.get_coords(), self.node_radius)
-            node.value.set_rect(rect)
+            # Creates appropriate rect based on direction
+            if node.value.get_direction() == "up" or node.value.get_direction() == "down":
+                texture = pygame.Rect(
+                    node.value.get_coords()[0] - self.get_snake_thickness()//2, 
+                    node.value.get_coords()[1] - self.get_node_radius(),
+                    self.get_snake_thickness(),
+                    2 * self.get_node_radius()
+                )
+            elif node.value.get_direction() == "left" or node.value.get_direction() == "right":
+                texture = pygame.Rect(
+                    node.value.get_coords()[0] - self.get_node_radius(), 
+                    node.value.get_coords()[1] - self.get_snake_thickness()//2,
+                    2 * self.get_node_radius(),
+                    self.get_snake_thickness()
+                )
+            # Assigns rect to node object for collision detection
+            node.value.set_rect(texture)
+            pygame.draw.rect(self.display, self.node_color, texture)
     
     def draw_apple(self) -> None:
         self.apple_rect = pygame.draw.circle(self.display, pygame.Color(255, 0, 0), self.apple_coords, self.apple_radius)
@@ -130,6 +148,9 @@ class Snake:
         if len(clipped) == 1: return clipped[0]
         return tuple(clipped)
     
+    def tick_eating(self) -> None:
+        self.set_is_eating(self.is_eating - 1)
+
     # Getters and setters
     def set_direction(self, direction: str) -> None:
         self.direction = direction
@@ -142,6 +163,9 @@ class Snake:
     
     def get_node_radius(self) -> float:
         return self.node_radius
+    
+    def get_game_radius(self) -> float:
+        return self.game_radius
     
     def get_direction(self) -> str | None:
         return self.direction
@@ -156,9 +180,6 @@ class Snake:
         if value >= 0:
             self.is_eating = value
     
-    def tick_eating(self) -> None:
-        self.set_is_eating(self.is_eating - 1)
-    
     def set_apple_coords(self) -> None:
         valid = False
         while not valid:
@@ -169,10 +190,14 @@ class Snake:
                     valid = False
                     break
         self.apple_coords = (x, y)
+    
+    def get_snake_thickness(self) -> float:
+        return self.snake_thickness
 
     class Node:
-        def __init__(self, x: int, y: int) -> None:
+        def __init__(self, x: int, y: int, direction: pygame.Rect) -> None:
             self.x, self.y = x, y
+            self.direction = direction
             self.rect = None
 
         def get_coords(self) -> tuple[float, float]:
@@ -183,3 +208,6 @@ class Snake:
 
         def get_rect(self) -> pygame.Rect:
             return self.rect
+        
+        def get_direction(self) -> str:
+            return self.direction
